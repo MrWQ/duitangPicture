@@ -35,10 +35,10 @@ def pringThreadNumberEverySecond():
 def getPictureList(keyword,startPage,endPage):
     start = int(startPage)*100
     pictureList = []
-    while(startPage<=endPage):
+    if(startPage<=endPage):
         # limit用来限制获取到的图片数目 最大为100 start为开始页数
         url = 'https://www.duitang.com/napi/blog/list/by_search/?kw='+str(keyword)+'&start='+str(start)+'&limit=100'
-        startPage+=1
+        # startPage+=1
         headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.61 Safari/537.36"}
         text = requests.get(url=url,headers=headers).text
         # print(text)
@@ -67,25 +67,28 @@ def getPictureList(keyword,startPage,endPage):
 def downloadDuitangPicture(keyword,startPage,endPage):
     # 创建文件夹
     makedir(keyword)
-    # 获取图片地址列表
-    pictureList = getPictureList(keyword,startPage,endPage)
-    print(pictureList)
-    print('获得图片数：'+str(len(pictureList)))
-    for count in range(0,len(pictureList)):
-        try:
-            name = str(keyword) + '_' + str(0) + '_' + str(count)
-            type = '.jpg'
-            # 多线程下载
-            mythread = threading.Thread(target=downloadPicture, args=(pictureList[count], name, type))
-            mythread.start()
-            # 打印线程名 和线程数目
-            print('thread name:' + str(mythread.name))
-            print(str(threading.activeCount()) + 'actived thread')
-            # 设置线程为64 当线程数目超过64时阻塞当前线程
-            if(threading.activeCount()>=64):
-                mythread.join()
-        except:
-            print(print('当前（第' + str(count) + '）图片下载超时，正在下载下一张'))
+    for page in range(startPage,endPage):
+        # 获取图片地址列表 100z张
+        pictureList = getPictureList(keyword,startPage,endPage)
+        # print(pictureList)
+        # 用户输入第1页 传进来的参数为0 ，为了显示一致，将0加回1，使图片命名页数为1
+        print('第'+str(page+1)+'页,获得图片数：'+str(len(pictureList)))
+        for count in range(0,len(pictureList)):
+            try:
+                # 用户输入第1页 传进来的参数为0 ，为了显示一致，将0加回1，使图片命名页数为1
+                name = str(keyword) + '_' + str(page+1) + '_' + str(count)
+                type = '.jpg'
+                # 多线程下载
+                mythread = threading.Thread(target=downloadPicture, args=(pictureList[count], name, type))
+                mythread.start()
+                # 打印线程名 和线程数目
+                print('thread name:' + str(mythread.name))
+                print(str(threading.activeCount()) + 'actived thread')
+                # 设置线程为64 当线程数目超过64时阻塞当前线程
+                if(threading.activeCount()>=64):
+                    mythread.join()
+            except:
+                print(print('当前（第' + str(count) + '）图片下载超时，正在下载下一张'))
 
 if __name__ =='__main__':
     downloadDuitangPicture('设计',0,2)
